@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transformation>
+  <info>
+    <name>trf_04_dimensoes</name>
+    <description>Popula localidade, revenda, produto e bandeira por chave natural (SCD tipo 1).</description>
+    <extended_description/>
+    <trans_version/>
+    <trans_type>Normal</trans_type>
+    <directory>/</directory>
+    <parameters/>
+    <log/>
+    <maxdate/>
+    <size_rowset>10000</size_rowset>
+    <sleep_time_empty>50</sleep_time_empty>
+    <sleep_time_full>50</sleep_time_full>
+    <unique_connections>N</unique_connections>
+    <feedback_shown>Y</feedback_shown>
+    <feedback_size>100000</feedback_size>
+    <using_thread_priorities>Y</using_thread_priorities>
+    <shared_objects_file/>
+    <capture_step_performance>N</capture_step_performance>
+    <step_performance_capturing_delay>1000</step_performance_capturing_delay>
+    <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
+    <dependencies/>
+    <partitionschemas/>
+    <slaveservers/>
+    <clusterschemas/>
+    <created_user>-</created_user>
+    <created_date>2026/10/16 00:00:00.000</created_date>
+    <modified_user>-</modified_user>
+    <modified_date>2026/10/16 00:00:00.000</modified_date>
+  </info>
+  <notepads>
+    <notepad>
+      <note>Insert/Update pela chave natural: a chave substituta (sk_*)
+é gerada pelo banco e não muda entre execuções.
+Bandeira é dimensão própria (não atributo da revenda):
+o posto pode trocar de bandeira ao longo do tempo.</note>
+      <xloc>880</xloc><yloc>80</yloc><width>380</width><heigth>90</heigth>
+      <fontname>Sans</fontname><fontsize>10</fontsize><fontbold>N</fontbold><fontitalic>N</fontitalic>
+      <fontcolorred>0</fontcolorred><fontcolorgreen>0</fontcolorgreen><fontcolorblue>0</fontcolorblue>
+      <backgroundcolorred>255</backgroundcolorred><backgroundcolorgreen>244</backgroundcolorgreen><backgroundcolorblue>205</backgroundcolorblue>
+      <bordercolorred>100</bordercolorred><bordercolorgreen>100</bordercolorgreen><bordercolorblue>100</bordercolorblue>
+      <drawshadow>N</drawshadow>
+    </notepad>
+  </notepads>
+  <connection>
+    <name>dw_postgres</name>
+    <server>${DW_HOST}</server>
+    <type>POSTGRESQL</type>
+    <access>Native</access>
+    <database>${DW_DB}</database>
+    <port>${DW_PORT}</port>
+    <username>${DW_USER}</username>
+    <password>${DW_PASSWORD}</password>
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
+    <attributes>
+      <attribute><code>EXTRA_OPTION_POSTGRESQL.reWriteBatchedInserts</code><attribute>true</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_LOWERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_UPPERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>IS_CLUSTERED</code><attribute>N</attribute></attribute>
+      <attribute><code>PORT_NUMBER</code><attribute>${DW_PORT}</attribute></attribute>
+      <attribute><code>PRESERVE_RESERVED_WORD_CASE</code><attribute>Y</attribute></attribute>
+      <attribute><code>QUOTE_ALL_FIELDS</code><attribute>N</attribute></attribute>
+      <attribute><code>SUPPORTS_BOOLEAN_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>SUPPORTS_TIMESTAMP_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>USE_POOLING</code><attribute>N</attribute></attribute>
+    </attributes>
+  </connection>
+  <order>
+    <hop><from>Localidades distintas</from><to>Nome da região</to><enabled>Y</enabled></hop>
+    <hop><from>Nome da região</from><to>Nome da UF</to><enabled>Y</enabled></hop>
+    <hop><from>Nome da UF</from><to>dw.dim_localidade</to><enabled>Y</enabled></hop>
+    <hop><from>Revendas (dado mais recente)</from><to>dw.dim_revenda</to><enabled>Y</enabled></hop>
+    <hop><from>Produtos distintos</from><to>Grupo do produto</to><enabled>Y</enabled></hop>
+    <hop><from>Grupo do produto</from><to>dw.dim_produto</to><enabled>Y</enabled></hop>
+    <hop><from>Bandeiras distintas</from><to>Tipo de bandeira</to><enabled>Y</enabled></hop>
+    <hop><from>Tipo de bandeira</from><to>dw.dim_bandeira</to><enabled>Y</enabled></hop>
+  </order>
+  <step>
+    <name>Localidades distintas</name>
+    <type>TableInput</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <sql>SELECT DISTINCT regiao_sigla, uf_sigla, municipio
+FROM stg.precos_tratado
+WHERE uf_sigla IS NOT NULL AND municipio IS NOT NULL</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <cached_row_meta_active>N</cached_row_meta_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>80</xloc><yloc>80</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Nome da região</name>
+    <type>ValueMapper</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <field_to_use>regiao_sigla</field_to_use>
+    <target_field>regiao_nome</target_field>
+    <non_match_default></non_match_default>
+    <fields>
+      <field><source_value>N</source_value><target_value>Norte</target_value></field>
+      <field><source_value>NE</source_value><target_value>Nordeste</target_value></field>
+      <field><source_value>CO</source_value><target_value>Centro-Oeste</target_value></field>
+      <field><source_value>SE</source_value><target_value>Sudeste</target_value></field>
+      <field><source_value>S</source_value><target_value>Sul</target_value></field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>280</xloc><yloc>80</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Nome da UF</name>
+    <type>ValueMapper</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <field_to_use>uf_sigla</field_to_use>
+    <target_field>uf_nome</target_field>
+    <non_match_default></non_match_default>
+    <fields>
+      <field><source_value>AC</source_value><target_value>Acre</target_value></field>
+      <field><source_value>AL</source_value><target_value>Alagoas</target_value></field>
+      <field><source_value>AP</source_value><target_value>Amapá</target_value></field>
+      <field><source_value>AM</source_value><target_value>Amazonas</target_value></field>
+      <field><source_value>BA</source_value><target_value>Bahia</target_value></field>
+      <field><source_value>CE</source_value><target_value>Ceará</target_value></field>
+      <field><source_value>DF</source_value><target_value>Distrito Federal</target_value></field>
+      <field><source_value>ES</source_value><target_value>Espírito Santo</target_value></field>
+      <field><source_value>GO</source_value><target_value>Goiás</target_value></field>
+      <field><source_value>MA</source_value><target_value>Maranhão</target_value></field>
+      <field><source_value>MT</source_value><target_value>Mato Grosso</target_value></field>
+      <field><source_value>MS</source_value><target_value>Mato Grosso do Sul</target_value></field>
+      <field><source_value>MG</source_value><target_value>Minas Gerais</target_value></field>
+      <field><source_value>PA</source_value><target_value>Pará</target_value></field>
+      <field><source_value>PB</source_value><target_value>Paraíba</target_value></field>
+      <field><source_value>PR</source_value><target_value>Paraná</target_value></field>
+      <field><source_value>PE</source_value><target_value>Pernambuco</target_value></field>
+      <field><source_value>PI</source_value><target_value>Piauí</target_value></field>
+      <field><source_value>RJ</source_value><target_value>Rio de Janeiro</target_value></field>
+      <field><source_value>RN</source_value><target_value>Rio Grande do Norte</target_value></field>
+      <field><source_value>RS</source_value><target_value>Rio Grande do Sul</target_value></field>
+      <field><source_value>RO</source_value><target_value>Rondônia</target_value></field>
+      <field><source_value>RR</source_value><target_value>Roraima</target_value></field>
+      <field><source_value>SC</source_value><target_value>Santa Catarina</target_value></field>
+      <field><source_value>SP</source_value><target_value>São Paulo</target_value></field>
+      <field><source_value>SE</source_value><target_value>Sergipe</target_value></field>
+      <field><source_value>TO</source_value><target_value>Tocantins</target_value></field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>480</xloc><yloc>80</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>dw.dim_localidade</name>
+    <type>InsertUpdate</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <commit>1000</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema>dw</schema>
+      <table>dim_localidade</table>
+      <key><name>uf_sigla</name><field>uf_sigla</field><condition>=</condition><name2/></key>
+      <key><name>municipio</name><field>municipio</field><condition>=</condition><name2/></key>
+      <value><name>uf_sigla</name><rename>uf_sigla</rename><update>N</update></value>
+      <value><name>municipio</name><rename>municipio</rename><update>N</update></value>
+      <value><name>regiao_sigla</name><rename>regiao_sigla</rename><update>Y</update></value>
+      <value><name>regiao_nome</name><rename>regiao_nome</rename><update>Y</update></value>
+      <value><name>uf_nome</name><rename>uf_nome</rename><update>Y</update></value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>680</xloc><yloc>80</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Revendas (dado mais recente)</name>
+    <type>TableInput</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <sql>-- Um registro por CNPJ, com a razão social/endereço da coleta mais recente (SCD tipo 1)
+SELECT DISTINCT ON (cnpj) cnpj, razao_social, bairro, cep
+FROM stg.precos_tratado
+WHERE cnpj IS NOT NULL
+ORDER BY cnpj, data_coleta DESC</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <cached_row_meta_active>N</cached_row_meta_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>80</xloc><yloc>220</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>dw.dim_revenda</name>
+    <type>InsertUpdate</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <commit>1000</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema>dw</schema>
+      <table>dim_revenda</table>
+      <key><name>cnpj</name><field>cnpj</field><condition>=</condition><name2/></key>
+      <value><name>cnpj</name><rename>cnpj</rename><update>N</update></value>
+      <value><name>razao_social</name><rename>razao_social</rename><update>Y</update></value>
+      <value><name>bairro</name><rename>bairro</rename><update>Y</update></value>
+      <value><name>cep</name><rename>cep</rename><update>Y</update></value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>680</xloc><yloc>220</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Produtos distintos</name>
+    <type>TableInput</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <sql>SELECT DISTINCT produto, unidade_medida
+FROM stg.precos_tratado
+WHERE produto IS NOT NULL</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <cached_row_meta_active>N</cached_row_meta_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>80</xloc><yloc>360</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Grupo do produto</name>
+    <type>ValueMapper</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <field_to_use>produto</field_to_use>
+    <target_field>grupo_produto</target_field>
+    <non_match_default>OUTROS</non_match_default>
+    <fields>
+      <field><source_value>GASOLINA</source_value><target_value>GASOLINA</target_value></field>
+      <field><source_value>GASOLINA ADITIVADA</source_value><target_value>GASOLINA</target_value></field>
+      <field><source_value>ETANOL</source_value><target_value>ETANOL</target_value></field>
+      <field><source_value>DIESEL</source_value><target_value>DIESEL</target_value></field>
+      <field><source_value>DIESEL S10</source_value><target_value>DIESEL</target_value></field>
+      <field><source_value>GNV</source_value><target_value>GNV</target_value></field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>380</xloc><yloc>360</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>dw.dim_produto</name>
+    <type>InsertUpdate</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <commit>1000</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema>dw</schema>
+      <table>dim_produto</table>
+      <key><name>produto</name><field>produto</field><condition>=</condition><name2/></key>
+      <value><name>produto</name><rename>produto</rename><update>N</update></value>
+      <value><name>grupo_produto</name><rename>grupo_produto</rename><update>Y</update></value>
+      <value><name>unidade_medida</name><rename>unidade_medida</rename><update>Y</update></value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>680</xloc><yloc>360</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Bandeiras distintas</name>
+    <type>TableInput</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <sql>SELECT DISTINCT bandeira
+FROM stg.precos_tratado
+WHERE bandeira IS NOT NULL</sql>
+    <limit>0</limit>
+    <lookup/>
+    <execute_each_row>N</execute_each_row>
+    <variables_active>N</variables_active>
+    <lazy_conversion_active>N</lazy_conversion_active>
+    <cached_row_meta_active>N</cached_row_meta_active>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>80</xloc><yloc>500</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Tipo de bandeira</name>
+    <type>ValueMapper</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <field_to_use>bandeira</field_to_use>
+    <target_field>tipo_bandeira</target_field>
+    <non_match_default>Distribuidora</non_match_default>
+    <fields>
+      <field><source_value>BRANCA</source_value><target_value>Bandeira branca</target_value></field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>380</xloc><yloc>500</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>dw.dim_bandeira</name>
+    <type>InsertUpdate</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <commit>1000</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema>dw</schema>
+      <table>dim_bandeira</table>
+      <key><name>bandeira</name><field>bandeira</field><condition>=</condition><name2/></key>
+      <value><name>bandeira</name><rename>bandeira</rename><update>N</update></value>
+      <value><name>tipo_bandeira</name><rename>tipo_bandeira</rename><update>Y</update></value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>680</xloc><yloc>500</yloc><draw>Y</draw></GUI>
+  </step>
+  <step_error_handling/>
+  <slave-step-copy-partition-distribution/>
+  <slave_transformation>N</slave_transformation>
+  <attributes/>
+</transformation>

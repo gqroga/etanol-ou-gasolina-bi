@@ -1,0 +1,29 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: dw_combustiveis
+    env_file: ../.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Dashboard. Lê só a camada mart, com o usuário bi_reader.
+  metabase:
+    image: metabase/metabase:v0.63.18.5
+    container_name: metabase_combustiveis
+    depends_on:
+      - postgres
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
+      JAVA_TIMEZONE: America/Sao_Paulo
+    ports:
+      - "${METABASE_PORT:-3000}:3000"
+    volumes:
+      - mbdata:/metabase-data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  mbdata:

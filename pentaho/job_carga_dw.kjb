@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job>
+  <name>job_carga_dw</name>
+  <description>Job mestre: CSV ANP -> staging -> modelo estrela -> mart, com validações.</description>
+  <extended_description/>
+  <job_version/>
+  <job_status>0</job_status>
+  <directory>/</directory>
+  <created_user>-</created_user>
+  <created_date>2026/10/16 00:00:00.000</created_date>
+  <modified_user>-</modified_user>
+  <modified_date>2026/10/16 00:00:00.000</modified_date>
+  <parameters>
+    <parameter><name>DW_HOST</name><default_value>localhost</default_value><description>Host do Postgres</description></parameter>
+    <parameter><name>DW_PORT</name><default_value>5432</default_value><description>Porta do Postgres</description></parameter>
+    <parameter><name>DW_DB</name><default_value>dw_combustiveis</default_value><description>Banco do DW</description></parameter>
+    <parameter><name>DW_USER</name><default_value>etl</default_value><description>Usuário de escrita</description></parameter>
+    <parameter><name>DW_PASSWORD</name><default_value></default_value><description>Senha do usuário etl (ver .env)</description></parameter>
+    <parameter><name>DIR_DADOS</name><default_value>${Internal.Entry.Current.Directory}/../data/raw</default_value><description>Pasta com os CSVs da ANP</description></parameter>
+  </parameters>
+  <connection>
+    <name>dw_postgres</name>
+    <server>${DW_HOST}</server>
+    <type>POSTGRESQL</type>
+    <access>Native</access>
+    <database>${DW_DB}</database>
+    <port>${DW_PORT}</port>
+    <username>${DW_USER}</username>
+    <password>${DW_PASSWORD}</password>
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
+    <attributes>
+      <attribute><code>EXTRA_OPTION_POSTGRESQL.reWriteBatchedInserts</code><attribute>true</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_LOWERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_UPPERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>IS_CLUSTERED</code><attribute>N</attribute></attribute>
+      <attribute><code>PORT_NUMBER</code><attribute>${DW_PORT}</attribute></attribute>
+      <attribute><code>PRESERVE_RESERVED_WORD_CASE</code><attribute>Y</attribute></attribute>
+      <attribute><code>QUOTE_ALL_FIELDS</code><attribute>N</attribute></attribute>
+      <attribute><code>SUPPORTS_BOOLEAN_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>SUPPORTS_TIMESTAMP_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>USE_POOLING</code><attribute>N</attribute></attribute>
+    </attributes>
+  </connection>
+  <slaveservers/>
+  <job-log-table><connection/><schema/><table/><size_limit_lines/><interval/><timeout_days/></job-log-table>
+  <jobentry-log-table><connection/><schema/><table/><timeout_days/></jobentry-log-table>
+  <channel-log-table><connection/><schema/><table/><timeout_days/></channel-log-table>
+  <pass_batchid>N</pass_batchid>
+  <shared_objects_file/>
+  <entries>
+    <entry>
+      <name>START</name>
+      <description/>
+      <type>SPECIAL</type>
+      <attributes/>
+      <start>Y</start><dummy>N</dummy><repeat>N</repeat>
+      <schedulerType>0</schedulerType><intervalSeconds>0</intervalSeconds><intervalMinutes>60</intervalMinutes>
+      <hour>12</hour><minutes>0</minutes><weekDay>1</weekDay><DayOfMonth>1</DayOfMonth>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>40</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Cria estruturas (stg)</name>
+      <description/>
+      <type>SQL</type>
+      <attributes/>
+      <sql/>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Entry.Current.Directory}/../sql/02_ddl_stg.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>dw_postgres</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>160</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Cria estruturas (dw)</name>
+      <description/>
+      <type>SQL</type>
+      <attributes/>
+      <sql/>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Entry.Current.Directory}/../sql/03_ddl_dw.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>dw_postgres</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>300</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>01 Carga staging</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>filename</specification_method>
+      <trans_object_id/>
+      <filename>${Internal.Entry.Current.Directory}/transformations/trf_01_carga_staging.ktr</filename>
+      <transname/>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>Y</clear_rows>
+      <clear_files>Y</clear_files>
+      <set_logfile>N</set_logfile><logfile/><logext/>
+      <add_date>N</add_date><add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster><slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration/>
+      <parameters><pass_all_parameters>Y</pass_all_parameters></parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>440</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>02 dim_data</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>filename</specification_method>
+      <trans_object_id/>
+      <filename>${Internal.Entry.Current.Directory}/transformations/trf_02_dim_data.ktr</filename>
+      <transname/>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>Y</clear_rows>
+      <clear_files>Y</clear_files>
+      <set_logfile>N</set_logfile><logfile/><logext/>
+      <add_date>N</add_date><add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster><slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration/>
+      <parameters><pass_all_parameters>Y</pass_all_parameters></parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>580</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>03 Tratamento</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>filename</specification_method>
+      <trans_object_id/>
+      <filename>${Internal.Entry.Current.Directory}/transformations/trf_03_tratamento.ktr</filename>
+      <transname/>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>Y</clear_rows>
+      <clear_files>Y</clear_files>
+      <set_logfile>N</set_logfile><logfile/><logext/>
+      <add_date>N</add_date><add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster><slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration/>
+      <parameters><pass_all_parameters>Y</pass_all_parameters></parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>720</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>04 Dimensões</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>filename</specification_method>
+      <trans_object_id/>
+      <filename>${Internal.Entry.Current.Directory}/transformations/trf_04_dimensoes.ktr</filename>
+      <transname/>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>Y</clear_rows>
+      <clear_files>Y</clear_files>
+      <set_logfile>N</set_logfile><logfile/><logext/>
+      <add_date>N</add_date><add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster><slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration/>
+      <parameters><pass_all_parameters>Y</pass_all_parameters></parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>860</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>05 Fato</name>
+      <description/>
+      <type>TRANS</type>
+      <attributes/>
+      <specification_method>filename</specification_method>
+      <trans_object_id/>
+      <filename>${Internal.Entry.Current.Directory}/transformations/trf_05_fato.ktr</filename>
+      <transname/>
+      <arg_from_previous>N</arg_from_previous>
+      <params_from_previous>N</params_from_previous>
+      <exec_per_row>N</exec_per_row>
+      <clear_rows>Y</clear_rows>
+      <clear_files>Y</clear_files>
+      <set_logfile>N</set_logfile><logfile/><logext/>
+      <add_date>N</add_date><add_time>N</add_time>
+      <loglevel>Basic</loglevel>
+      <cluster>N</cluster><slave_server_name/>
+      <set_append_logfile>N</set_append_logfile>
+      <wait_until_finished>Y</wait_until_finished>
+      <follow_abort_remote>N</follow_abort_remote>
+      <create_parent_folder>N</create_parent_folder>
+      <logging_remote_work>N</logging_remote_work>
+      <run_configuration/>
+      <parameters><pass_all_parameters>Y</pass_all_parameters></parameters>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>1000</xloc>
+      <yloc>120</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Marca outliers</name>
+      <description/>
+      <type>SQL</type>
+      <attributes/>
+      <sql/>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Entry.Current.Directory}/../sql/04_outliers.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>dw_postgres</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>1000</xloc>
+      <yloc>260</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Views da camada mart</name>
+      <description/>
+      <type>SQL</type>
+      <attributes/>
+      <sql/>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Entry.Current.Directory}/../sql/05_views_mart.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>dw_postgres</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>860</xloc>
+      <yloc>260</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Validações -&gt; log_carga</name>
+      <description/>
+      <type>SQL</type>
+      <attributes/>
+      <sql/>
+      <useVariableSubstitution>F</useVariableSubstitution>
+      <sqlfromfile>T</sqlfromfile>
+      <sqlfilename>${Internal.Entry.Current.Directory}/../sql/06_validacoes.sql</sqlfilename>
+      <sendOneStatement>F</sendOneStatement>
+      <connection>dw_postgres</connection>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>720</xloc>
+      <yloc>260</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Sucesso</name>
+      <description/>
+      <type>SUCCESS</type>
+      <attributes/>
+
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>1120</xloc>
+      <yloc>260</yloc>
+      <attributes_kjc/>
+    </entry>
+    <entry>
+      <name>Falha</name>
+      <description/>
+      <type>ABORT</type>
+      <attributes/>
+      <message>Carga do DW falhou: veja o log da etapa em vermelho.</message>
+      <parallel>N</parallel>
+      <draw>Y</draw>
+      <nr>0</nr>
+      <xloc>600</xloc>
+      <yloc>400</yloc>
+      <attributes_kjc/>
+    </entry>
+  </entries>
+  <hops>
+    <hop><from>START</from><to>Cria estruturas (stg)</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>Y</unconditional></hop>
+    <hop><from>Cria estruturas (stg)</from><to>Cria estruturas (dw)</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Cria estruturas (dw)</from><to>01 Carga staging</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>01 Carga staging</from><to>02 dim_data</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>02 dim_data</from><to>03 Tratamento</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>03 Tratamento</from><to>04 Dimensões</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>04 Dimensões</from><to>05 Fato</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>05 Fato</from><to>Marca outliers</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Marca outliers</from><to>Views da camada mart</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Views da camada mart</from><to>Validações -&gt; log_carga</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Validações -&gt; log_carga</from><to>Sucesso</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>Y</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Cria estruturas (stg)</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Cria estruturas (dw)</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>01 Carga staging</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>02 dim_data</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>03 Tratamento</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>04 Dimensões</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>05 Fato</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Marca outliers</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Views da camada mart</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+    <hop><from>Validações -&gt; log_carga</from><to>Falha</to><from_nr>0</from_nr><to_nr>0</to_nr>
+      <enabled>Y</enabled><evaluation>N</evaluation><unconditional>N</unconditional></hop>
+  </hops>
+  <notepads>
+    <notepad>
+      <note>Fluxo: estruturas -&gt; staging -&gt; dim_data -&gt; limpeza -&gt; dimensões -&gt; fato
+-&gt; outliers (SQL) -&gt; views mart -&gt; validações.
+Reexecutável: rodar 2x gera o mesmo resultado (idempotente).
+Qualquer falha desvia para 'Falha'.</note>
+      <xloc>40</xloc><yloc>330</yloc><width>440</width><heigth>80</heigth>
+      <fontname>Sans</fontname><fontsize>10</fontsize><fontbold>N</fontbold><fontitalic>N</fontitalic>
+      <fontcolorred>0</fontcolorred><fontcolorgreen>0</fontcolorgreen><fontcolorblue>0</fontcolorblue>
+      <backgroundcolorred>255</backgroundcolorred><backgroundcolorgreen>244</backgroundcolorgreen><backgroundcolorblue>205</backgroundcolorblue>
+      <bordercolorred>100</bordercolorred><bordercolorgreen>100</bordercolorgreen><bordercolorblue>100</bordercolorblue>
+      <drawshadow>N</drawshadow>
+    </notepad>
+  </notepads>
+  <attributes/>
+</job>

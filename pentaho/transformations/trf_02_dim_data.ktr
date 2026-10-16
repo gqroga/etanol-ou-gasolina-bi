@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<transformation>
+  <info>
+    <name>trf_02_dim_data</name>
+    <description>Gera o calendário contínuo 2023-01-01 a 2025-12-31.</description>
+    <extended_description/>
+    <trans_version/>
+    <trans_type>Normal</trans_type>
+    <directory>/</directory>
+    <parameters/>
+    <log/>
+    <maxdate/>
+    <size_rowset>10000</size_rowset>
+    <sleep_time_empty>50</sleep_time_empty>
+    <sleep_time_full>50</sleep_time_full>
+    <unique_connections>N</unique_connections>
+    <feedback_shown>Y</feedback_shown>
+    <feedback_size>100000</feedback_size>
+    <using_thread_priorities>Y</using_thread_priorities>
+    <shared_objects_file/>
+    <capture_step_performance>N</capture_step_performance>
+    <step_performance_capturing_delay>1000</step_performance_capturing_delay>
+    <step_performance_capturing_size_limit>100</step_performance_capturing_size_limit>
+    <dependencies/>
+    <partitionschemas/>
+    <slaveservers/>
+    <clusterschemas/>
+    <created_user>-</created_user>
+    <created_date>2026/10/16 00:00:00.000</created_date>
+    <modified_user>-</modified_user>
+    <modified_date>2026/10/16 00:00:00.000</modified_date>
+  </info>
+  <notepads>
+    <notepad>
+      <note>Calendário gerado, não extraído dos dados:
+garante dias contínuos (pré-requisito para
+inteligência de tempo no DAX).
+Para ampliar o período, mude o limite de linhas.</note>
+      <xloc>80</xloc><yloc>20</yloc><width>330</width><heigth>90</heigth>
+      <fontname>Sans</fontname><fontsize>10</fontsize><fontbold>N</fontbold><fontitalic>N</fontitalic>
+      <fontcolorred>0</fontcolorred><fontcolorgreen>0</fontcolorgreen><fontcolorblue>0</fontcolorblue>
+      <backgroundcolorred>255</backgroundcolorred><backgroundcolorgreen>244</backgroundcolorgreen><backgroundcolorblue>205</backgroundcolorblue>
+      <bordercolorred>100</bordercolorred><bordercolorgreen>100</bordercolorgreen><bordercolorblue>100</bordercolorblue>
+      <drawshadow>N</drawshadow>
+    </notepad>
+  </notepads>
+  <connection>
+    <name>dw_postgres</name>
+    <server>${DW_HOST}</server>
+    <type>POSTGRESQL</type>
+    <access>Native</access>
+    <database>${DW_DB}</database>
+    <port>${DW_PORT}</port>
+    <username>${DW_USER}</username>
+    <password>${DW_PASSWORD}</password>
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
+    <attributes>
+      <attribute><code>EXTRA_OPTION_POSTGRESQL.reWriteBatchedInserts</code><attribute>true</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_LOWERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>FORCE_IDENTIFIERS_TO_UPPERCASE</code><attribute>N</attribute></attribute>
+      <attribute><code>IS_CLUSTERED</code><attribute>N</attribute></attribute>
+      <attribute><code>PORT_NUMBER</code><attribute>${DW_PORT}</attribute></attribute>
+      <attribute><code>PRESERVE_RESERVED_WORD_CASE</code><attribute>Y</attribute></attribute>
+      <attribute><code>QUOTE_ALL_FIELDS</code><attribute>N</attribute></attribute>
+      <attribute><code>SUPPORTS_BOOLEAN_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>SUPPORTS_TIMESTAMP_DATA_TYPE</code><attribute>Y</attribute></attribute>
+      <attribute><code>USE_POOLING</code><attribute>N</attribute></attribute>
+    </attributes>
+  </connection>
+  <order>
+    <hop><from>Gera 1096 dias</from><to>Nº do dia</to><enabled>Y</enabled></hop>
+    <hop><from>Nº do dia</from><to>Data e partes da data</to><enabled>Y</enabled></hop>
+    <hop><from>Data e partes da data</from><to>Nomes em português</to><enabled>Y</enabled></hop>
+    <hop><from>Nomes em português</from><to>Colunas da dimensão</to><enabled>Y</enabled></hop>
+    <hop><from>Colunas da dimensão</from><to>dw.dim_data</to><enabled>Y</enabled></hop>
+  </order>
+  <step>
+    <name>Gera 1096 dias</name>
+    <type>RowGenerator</type>
+    <description>2023-01-01 + 1096 dias = até 2025-12-31</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <fields>
+      <field><name>data_inicio</name><type>Date</type><format>yyyy-MM-dd</format><currency/><decimal/><group/>
+        <nullif>2023-01-01</nullif><length>-1</length><precision>-1</precision><set_empty_string>N</set_empty_string></field>
+    </fields>
+    <limit>1096</limit>
+    <never_ending>N</never_ending>
+    <interval_in_ms/><row_time_field/><last_time_field/>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>80</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Nº do dia</name>
+    <type>Sequence</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <valuename>nr_dia</valuename>
+    <use_database>N</use_database><connection/><schema/><seqname>SEQ_</seqname>
+    <use_counter>Y</use_counter><counter_name/>
+    <start_at>0</start_at><increment_by>1</increment_by><max_value>999999999</max_value>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>240</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Data e partes da data</name>
+    <type>Calculator</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <failIfNoFile>N</failIfNoFile>
+    <calculation>
+      <field_name>data</field_name><calc_type>ADD_DAYS</calc_type>
+      <field_a>data_inicio</field_a><field_b>nr_dia</field_b><field_c/>
+      <value_type>Date</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>ano</field_name><calc_type>YEAR_OF_DATE</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>mes</field_name><calc_type>MONTH_OF_DATE</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>dia</field_name><calc_type>DAY_OF_MONTH</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>dia_semana</field_name><calc_type>DAY_OF_WEEK</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>semana_ano</field_name><calc_type>WEEK_OF_YEAR_ISO8601</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>trimestre</field_name><calc_type>QUARTER_OF_DATE</calc_type>
+      <field_a>data</field_a><field_b></field_b><field_c/>
+      <value_type>Integer</value_type><value_length>-1</value_length><value_precision>-1</value_precision>
+      <remove>N</remove><conversion_mask/><decimal_symbol/><grouping_symbol/><currency_symbol/>
+    </calculation>
+
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>400</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Nomes em português</name>
+    <type>ScriptValueMod</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <compatible>N</compatible>
+    <optimizationLevel>9</optimizationLevel>
+    <jsScripts>
+      <jsScript><jsScript_type>0</jsScript_type><jsScript_name>Script 1</jsScript_name>
+        <jsScript_script>var meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+var dias  = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+var a = Number(ano), m = Number(mes), d = Number(dia);
+
+var sk_data         = a * 10000 + m * 100 + d;
+var nome_mes        = meses[m - 1];
+var mes_abrev       = nome_mes.substring(0, 3);
+var nome_dia_semana = dias[Number(dia_semana) - 1];
+var semestre        = m &lt;= 6 ? 1 : 2;
+var ano_mes         = a + "-" + (m &lt; 10 ? "0" : "") + m;
+var ano_mes_ordem   = a * 100 + m;</jsScript_script></jsScript>
+    </jsScripts>
+    <fields>
+      <field><name>sk_data</name><rename>sk_data</rename><type>Integer</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>nome_mes</name><rename>nome_mes</rename><type>String</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>mes_abrev</name><rename>mes_abrev</rename><type>String</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>nome_dia_semana</name><rename>nome_dia_semana</rename><type>String</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>semestre</name><rename>semestre</rename><type>Integer</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>ano_mes</name><rename>ano_mes</rename><type>String</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+      <field><name>ano_mes_ordem</name><rename>ano_mes_ordem</rename><type>Integer</type><length>-1</length><precision>-1</precision><replace>N</replace></field>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>560</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>Colunas da dimensão</name>
+    <type>SelectValues</type>
+    <description></description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <fields>
+      <field><name>sk_data</name><rename></rename></field>
+      <field><name>data</name><rename></rename></field>
+      <field><name>dia</name><rename></rename></field>
+      <field><name>dia_semana</name><rename></rename></field>
+      <field><name>nome_dia_semana</name><rename></rename></field>
+      <field><name>semana_ano</name><rename></rename></field>
+      <field><name>mes</name><rename></rename></field>
+      <field><name>nome_mes</name><rename></rename></field>
+      <field><name>mes_abrev</name><rename></rename></field>
+      <field><name>trimestre</name><rename></rename></field>
+      <field><name>semestre</name><rename></rename></field>
+      <field><name>ano</name><rename></rename></field>
+      <field><name>ano_mes</name><rename></rename></field>
+      <field><name>ano_mes_ordem</name><rename></rename></field>
+      <select_unspecified>N</select_unspecified>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>720</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step>
+    <name>dw.dim_data</name>
+    <type>InsertUpdate</type>
+    <description>Insert/Update: rodar de novo não duplica (idempotente).</description>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning><method>none</method><schema_name/></partitioning>
+    <connection>dw_postgres</connection>
+    <commit>1000</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema>dw</schema>
+      <table>dim_data</table>
+      <key><name>sk_data</name><field>sk_data</field><condition>=</condition><name2/></key>
+      <value><name>sk_data</name><rename>sk_data</rename><update>N</update></value>
+      <value><name>data</name><rename>data</rename><update>Y</update></value>
+      <value><name>dia</name><rename>dia</rename><update>Y</update></value>
+      <value><name>dia_semana</name><rename>dia_semana</rename><update>Y</update></value>
+      <value><name>nome_dia_semana</name><rename>nome_dia_semana</rename><update>Y</update></value>
+      <value><name>semana_ano</name><rename>semana_ano</rename><update>Y</update></value>
+      <value><name>mes</name><rename>mes</rename><update>Y</update></value>
+      <value><name>nome_mes</name><rename>nome_mes</rename><update>Y</update></value>
+      <value><name>mes_abrev</name><rename>mes_abrev</rename><update>Y</update></value>
+      <value><name>trimestre</name><rename>trimestre</rename><update>Y</update></value>
+      <value><name>semestre</name><rename>semestre</rename><update>Y</update></value>
+      <value><name>ano</name><rename>ano</rename><update>Y</update></value>
+      <value><name>ano_mes</name><rename>ano_mes</rename><update>Y</update></value>
+      <value><name>ano_mes_ordem</name><rename>ano_mes_ordem</rename><update>Y</update></value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps><input/><output/></remotesteps>
+    <GUI><xloc>880</xloc><yloc>160</yloc><draw>Y</draw></GUI>
+  </step>
+  <step_error_handling/>
+  <slave-step-copy-partition-distribution/>
+  <slave_transformation>N</slave_transformation>
+  <attributes/>
+</transformation>

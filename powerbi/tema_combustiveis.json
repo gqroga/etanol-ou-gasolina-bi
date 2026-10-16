@@ -1,0 +1,21 @@
+{
+  "name": "Combustiveis MBA",
+  "dataColors": ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4", "#008300", "#6250D6", "#E34948"],
+  "foreground": "#0B0B0B",
+  "foregroundNeutralSecondary": "#52514E",
+  "background": "#FFFFFF",
+  "backgroundLight": "#F5F5F3",
+  "tableAccent": "#2A78D6",
+  "good": "#1BAF7A",
+  "neutral": "#C3C2B7",
+  "bad": "#E34948",
+  "maximum": "#104281",
+  "center": "#86B6EF",
+  "minimum": "#CDE2FB",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#0B0B0B" },
+    "header": { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#0B0B0B" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#52514E" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 28, "color": "#0B0B0B" }
+  }
+}

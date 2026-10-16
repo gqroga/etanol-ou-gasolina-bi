@@ -1,0 +1,115 @@
+// =====================================================================
+// Medidas DAX: tabela de medidas "_Medidas"
+// Tabelas do modelo (nomes no Power BI):
+//   fPreco      <- mart.vw_fato_preco
+//   dData       <- mart.vw_dim_data        (marcada como tabela de datas)
+//   dLocalidade <- mart.vw_dim_localidade
+//   dRevenda    <- mart.vw_dim_revenda
+//   dProduto    <- mart.vw_dim_produto
+//   dBandeira   <- mart.vw_dim_bandeira
+// Regra: preço é NÃO aditivo -> média/mediana, nunca SUM.
+// Toda medida ignora outliers (fl_outlier = 1), como no notebook.
+// =====================================================================
+
+// ---------- Pasta: Base ----------
+
+Preço Médio =
+CALCULATE ( AVERAGE ( fPreco[valor_venda] ), fPreco[fl_outlier] = 0 )
+
+Preço Mediano =
+CALCULATE ( MEDIAN ( fPreco[valor_venda] ), fPreco[fl_outlier] = 0 )
+
+Qtd Coletas =
+CALCULATE ( COUNTROWS ( fPreco ), fPreco[fl_outlier] = 0 )
+
+Qtd Postos =
+CALCULATE ( DISTINCTCOUNT ( fPreco[sk_revenda] ), fPreco[fl_outlier] = 0 )
+
+// ---------- Pasta: Tempo ----------
+
+Preço Médio Mês Anterior =
+CALCULATE ( [Preço Médio], DATEADD ( dData[data], -1, MONTH ) )
+
+Var % Mês Anterior =
+DIVIDE ( [Preço Médio] - [Preço Médio Mês Anterior], [Preço Médio Mês Anterior] )
+
+Preço Médio Ano Anterior =
+CALCULATE ( [Preço Médio], SAMEPERIODLASTYEAR ( dData[data] ) )
+
+Var % Ano Anterior =
+DIVIDE ( [Preço Médio] - [Preço Médio Ano Anterior], [Preço Médio Ano Anterior] )
+
+// ---------- Pasta: Etanol x Gasolina (achado principal) ----------
+
+Preço Etanol =
+CALCULATE ( [Preço Médio], dProduto[produto] = "ETANOL" )
+
+Preço Gasolina =
+CALCULATE ( [Preço Médio], dProduto[produto] = "GASOLINA" )
+
+// Etanol rende ~70% da gasolina: paridade <= 0,70 -> etanol compensa.
+// DIVIDE devolve BLANK se faltar um dos dois preços (o lugar fica fora da conta).
+Paridade Etanol/Gasolina =
+DIVIDE ( [Preço Etanol], [Preço Gasolina] )
+
+Melhor Escolha =
+VAR p = [Paridade Etanol/Gasolina]
+RETURN
+    IF ( ISBLANK ( p ), BLANK (), IF ( p <= 0.70, "Etanol", "Gasolina" ) )
+
+UFs onde Etanol Compensa =
+COUNTROWS (
+    FILTER (
+        VALUES ( dLocalidade[uf_sigla] ),
+        VAR p = [Paridade Etanol/Gasolina]
+        RETURN NOT ISBLANK ( p ) && p <= 0.70
+    )
+)
+
+Qtd UFs com Paridade =
+COUNTROWS (
+    FILTER ( VALUES ( dLocalidade[uf_sigla] ), NOT ISBLANK ( [Paridade Etanol/Gasolina] ) )
+)
+
+% Municípios onde Etanol Compensa =
+VAR municipios =
+    FILTER ( VALUES ( dLocalidade[municipio_uf] ), NOT ISBLANK ( [Paridade Etanol/Gasolina] ) )
+RETURN
+    DIVIDE (
+        COUNTROWS ( FILTER ( municipios, [Paridade Etanol/Gasolina] <= 0.70 ) ),
+        COUNTROWS ( municipios )
+    )
+
+// Formatação condicional das barras (Cores dos dados > fx > Valor do campo)
+Cor Paridade =
+IF ( [Paridade Etanol/Gasolina] <= 0.70, "#2A78D6", "#C3C2B7" )
+
+// Título que afirma o achado e muda com o filtro de ano
+Título Achado =
+VAR ano = SELECTEDVALUE ( dData[ano], "2023–2025" )
+RETURN
+    "Em " & ano & ", o etanol compensou em " & [UFs onde Etanol Compensa]
+        & " de " & [Qtd UFs com Paridade] & " estados"
+
+// ---------- Pasta: Detalhe ----------
+
+Diferencial Bandeira Branca =
+CALCULATE ( [Preço Médio], dBandeira[tipo_bandeira] = "Bandeira branca" )
+    - CALCULATE ( [Preço Médio], dBandeira[tipo_bandeira] = "Distribuidora" )
+
+Dispersão de Preço (CV) =
+DIVIDE (
+    CALCULATE ( STDEV.S ( fPreco[valor_venda] ), fPreco[fl_outlier] = 0 ),
+    [Preço Médio]
+)
+
+// ---------- Pasta: Qualidade (página técnica) ----------
+
+Qtd Coletas (todas) =
+COUNTROWS ( fPreco )
+
+Qtd Outliers =
+CALCULATE ( COUNTROWS ( fPreco ), fPreco[fl_outlier] = 1 )
+
+% Outliers =
+DIVIDE ( [Qtd Outliers], [Qtd Coletas (todas)] )

@@ -1,0 +1,7 @@
+# Copie estas linhas para ~/.kettle/kettle.properties para rodar transformações avulsas no Spoon.
+DW_HOST=localhost
+DW_PORT=5432
+DW_DB=dw_combustiveis
+DW_USER=etl
+DW_PASSWORD=<ETL_PASSWORD do .env>
+DIR_DADOS=/caminho/para/etanol-ou-gasolina-bi/data/raw

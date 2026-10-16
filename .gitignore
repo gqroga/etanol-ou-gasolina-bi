@@ -1,0 +1,29 @@
+# Dados brutos (baixar conforme data/README.md)
+data/raw/*
+!data/raw/.gitkeep
+
+# Segredos
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Pentaho
+*.kjb.backup
+*.ktr.backup
+.kettle/
+
+# Power BI (arquivos temporários)
+~$*.pbix
+*.pbix.tmp
+
+# SO / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+pentaho/logs/
